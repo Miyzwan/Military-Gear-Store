@@ -9,6 +9,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
   - name: products
     description: Product operations
   - name: categories
@@ -21,7 +23,6 @@ paths:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -30,11 +31,68 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /auth/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Login as admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [auth]
+      summary: Logout current session
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Get current authenticated admin
+      responses:
+        "200":
+          description: Current admin info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminInfo"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /products:
     get:
       operationId: getProducts
       tags: [products]
-      summary: Get all products
+      summary: Get all products (public)
       parameters:
         - name: categoryId
           in: query
@@ -60,7 +118,7 @@ paths:
     post:
       operationId: createProduct
       tags: [products]
-      summary: Create a new product
+      summary: Create a new product (admin only)
       requestBody:
         required: true
         content:
@@ -79,7 +137,7 @@ paths:
     get:
       operationId: getProduct
       tags: [products]
-      summary: Get a product by ID
+      summary: Get a product by ID (public)
       parameters:
         - name: id
           in: path
@@ -98,7 +156,7 @@ paths:
     put:
       operationId: updateProduct
       tags: [products]
-      summary: Update a product
+      summary: Update a product (admin only)
       parameters:
         - name: id
           in: path
@@ -121,7 +179,7 @@ paths:
     delete:
       operationId: deleteProduct
       tags: [products]
-      summary: Delete a product
+      summary: Delete a product (admin only)
       parameters:
         - name: id
           in: path
@@ -136,7 +194,7 @@ paths:
     get:
       operationId: getCategories
       tags: [categories]
-      summary: Get all categories
+      summary: Get all categories (public)
       responses:
         "200":
           description: List of categories
@@ -149,7 +207,7 @@ paths:
     post:
       operationId: createCategory
       tags: [categories]
-      summary: Create a new category
+      summary: Create a new category (admin only)
       requestBody:
         required: true
         content:
@@ -168,7 +226,7 @@ paths:
     put:
       operationId: updateCategory
       tags: [categories]
-      summary: Update a category
+      summary: Update a category (admin only)
       parameters:
         - name: id
           in: path
@@ -191,7 +249,7 @@ paths:
     delete:
       operationId: deleteCategory
       tags: [categories]
-      summary: Delete a category
+      summary: Delete a category (admin only)
       parameters:
         - name: id
           in: path
@@ -206,7 +264,7 @@ paths:
     get:
       operationId: getSettings
       tags: [settings]
-      summary: Get store settings
+      summary: Get store settings (public)
       responses:
         "200":
           description: Store settings
@@ -217,7 +275,7 @@ paths:
     put:
       operationId: updateSettings
       tags: [settings]
-      summary: Update store settings
+      summary: Update store settings (admin only)
       requestBody:
         required: true
         content:
@@ -239,8 +297,50 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        admin:
+          $ref: "#/components/schemas/AdminInfo"
+      required: [success, admin]
+
+    AdminInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        isActive:
+          type: boolean
+      required: [id, username, isActive]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 
     Product:
       type: object
@@ -271,15 +371,7 @@ components:
         createdAt:
           type: string
           format: date-time
-      required:
-        - id
-        - name
-        - description
-        - price
-        - stock
-        - featured
-        - isActive
-        - createdAt
+      required: [id, name, description, price, stock, featured, isActive, createdAt]
 
     CreateProductRequest:
       type: object
@@ -302,11 +394,7 @@ components:
           type: boolean
         isActive:
           type: boolean
-      required:
-        - name
-        - description
-        - price
-        - stock
+      required: [name, description, price, stock]
 
     UpdateProductRequest:
       type: object
@@ -347,11 +435,7 @@ components:
           nullable: true
         productCount:
           type: integer
-      required:
-        - id
-        - name
-        - slug
-        - productCount
+      required: [id, name, slug, productCount]
 
     CreateCategoryRequest:
       type: object
@@ -366,9 +450,7 @@ components:
         imageUrl:
           type: string
           nullable: true
-      required:
-        - name
-        - slug
+      required: [name, slug]
 
     StoreSettings:
       type: object
@@ -402,11 +484,7 @@ components:
         operatingHours:
           type: string
           nullable: true
-      required:
-        - id
-        - storeName
-        - whatsappNumber
-        - heroTitle
+      required: [id, storeName, whatsappNumber, heroTitle]
 
     UpdateSettingsRequest:
       type: object

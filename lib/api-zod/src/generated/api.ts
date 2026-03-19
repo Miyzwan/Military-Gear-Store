@@ -8,7 +8,6 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -16,7 +15,40 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Get all products
+ * @summary Login as admin
+ */
+export const AdminLoginBody = zod.object({
+  username: zod.string(),
+  password: zod.string(),
+});
+
+export const AdminLoginResponse = zod.object({
+  success: zod.boolean(),
+  admin: zod.object({
+    id: zod.number(),
+    username: zod.string(),
+    isActive: zod.boolean(),
+  }),
+});
+
+/**
+ * @summary Logout current session
+ */
+export const AdminLogoutResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Get current authenticated admin
+ */
+export const GetAuthMeResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  isActive: zod.boolean(),
+});
+
+/**
+ * @summary Get all products (public)
  */
 export const GetProductsQueryParams = zod.object({
   categoryId: zod.coerce.number().optional(),
@@ -40,7 +72,7 @@ export const GetProductsResponseItem = zod.object({
 export const GetProductsResponse = zod.array(GetProductsResponseItem);
 
 /**
- * @summary Create a new product
+ * @summary Create a new product (admin only)
  */
 export const CreateProductBody = zod.object({
   name: zod.string(),
@@ -54,7 +86,7 @@ export const CreateProductBody = zod.object({
 });
 
 /**
- * @summary Get a product by ID
+ * @summary Get a product by ID (public)
  */
 export const GetProductParams = zod.object({
   id: zod.coerce.number(),
@@ -75,7 +107,7 @@ export const GetProductResponse = zod.object({
 });
 
 /**
- * @summary Update a product
+ * @summary Update a product (admin only)
  */
 export const UpdateProductParams = zod.object({
   id: zod.coerce.number(),
@@ -107,14 +139,14 @@ export const UpdateProductResponse = zod.object({
 });
 
 /**
- * @summary Delete a product
+ * @summary Delete a product (admin only)
  */
 export const DeleteProductParams = zod.object({
   id: zod.coerce.number(),
 });
 
 /**
- * @summary Get all categories
+ * @summary Get all categories (public)
  */
 export const GetCategoriesResponseItem = zod.object({
   id: zod.number(),
@@ -127,7 +159,7 @@ export const GetCategoriesResponseItem = zod.object({
 export const GetCategoriesResponse = zod.array(GetCategoriesResponseItem);
 
 /**
- * @summary Create a new category
+ * @summary Create a new category (admin only)
  */
 export const CreateCategoryBody = zod.object({
   name: zod.string(),
@@ -137,7 +169,7 @@ export const CreateCategoryBody = zod.object({
 });
 
 /**
- * @summary Update a category
+ * @summary Update a category (admin only)
  */
 export const UpdateCategoryParams = zod.object({
   id: zod.coerce.number(),
@@ -160,14 +192,14 @@ export const UpdateCategoryResponse = zod.object({
 });
 
 /**
- * @summary Delete a category
+ * @summary Delete a category (admin only)
  */
 export const DeleteCategoryParams = zod.object({
   id: zod.coerce.number(),
 });
 
 /**
- * @summary Get store settings
+ * @summary Get store settings (public)
  */
 export const GetSettingsResponse = zod.object({
   id: zod.number(),
@@ -184,7 +216,7 @@ export const GetSettingsResponse = zod.object({
 });
 
 /**
- * @summary Update store settings
+ * @summary Update store settings (admin only)
  */
 export const UpdateSettingsBody = zod.object({
   storeName: zod.string().optional(),

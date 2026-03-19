@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, storeSettingsTable } from "@workspace/db";
 import { UpdateSettingsBody } from "@workspace/api-zod";
+import { eq } from "drizzle-orm";
+import { requireAdmin } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
 
@@ -25,17 +27,19 @@ async function ensureSettings() {
   return existing[0];
 }
 
+// ── Public ────────────────────────────────────────────────────────────────────
 router.get("/", async (_req, res) => {
   try {
     const settings = await ensureSettings();
     res.json(settings);
   } catch (error) {
-    console.error(error);
+    console.error("[settings GET /]", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.put("/", async (req, res) => {
+// ── Admin-protected ───────────────────────────────────────────────────────────
+router.put("/", requireAdmin, async (req, res) => {
   try {
     const body = UpdateSettingsBody.parse(req.body);
     const settings = await ensureSettings();
@@ -53,7 +57,6 @@ router.put("/", async (req, res) => {
     if (body.operatingHours !== undefined) updateData.operatingHours = body.operatingHours;
     updateData.updatedAt = new Date();
 
-    const { eq } = await import("drizzle-orm");
     const [updated] = await db
       .update(storeSettingsTable)
       .set(updateData)
@@ -62,7 +65,7 @@ router.put("/", async (req, res) => {
 
     res.json(updated);
   } catch (error) {
-    console.error(error);
+    console.error("[settings PUT /]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });

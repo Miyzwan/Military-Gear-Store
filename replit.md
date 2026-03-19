@@ -63,6 +63,32 @@ artifacts-monorepo/
 - `products` — Products (name, description, price, imageUrl, categoryId, stock, featured, isActive)
 - `store_settings` — Store config (storeName, whatsappNumber, heroTitle, heroSubtitle, address, email, etc.)
 
+## Authentication
+
+Admin authentication uses **express-session** with a PostgreSQL session store.
+
+- Sessions are stored in the `admin_sessions` table (auto-created)
+- Passwords are hashed with **bcrypt** (12 salt rounds)
+- Session cookie: `warzone.sid` (httpOnly, sameSite=lax, 7 days)
+
+### Credentials & Secrets
+
+| Where | Variable | Purpose |
+|---|---|---|
+| Replit Secret | `SESSION_SECRET` | Signs the session cookie (auto-generated) |
+| Replit Env | `ADMIN_USERNAME` | Admin login username |
+| Replit Env | `ADMIN_PASSWORD` | Admin login password |
+
+**To change admin credentials:** Update `ADMIN_USERNAME` and/or `ADMIN_PASSWORD` in the Replit Secrets/Env tab, then restart the API server. The server auto-syncs the account on every startup via `src/lib/adminSeed.ts`.
+
+**Never hardcode credentials** — always use env vars.
+
+### Subdomain split readiness
+To isolate admin to `admin.warzone.id` later:
+1. Extract `/api/auth` + write routes to a separate Express app
+2. Keep only public GET routes on the main server
+3. Update CORS `origin` to allow the admin subdomain
+
 ## API Endpoints
 
 - `GET /api/healthz` — Health check

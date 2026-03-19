@@ -17,11 +17,16 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminInfo,
   Category,
   CreateCategoryRequest,
   CreateProductRequest,
+  ErrorResponse,
   GetProductsParams,
   HealthStatus,
+  LoginRequest,
+  LoginResponse,
+  MessageResponse,
   Product,
   StoreSettings,
   UpdateProductRequest,
@@ -38,7 +43,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -114,7 +118,239 @@ export function useHealthCheck<
 }
 
 /**
- * @summary Get all products
+ * @summary Login as admin
+ */
+export const getAdminLoginUrl = () => {
+  return `/api/auth/login`;
+};
+
+export const adminLogin = async (
+  loginRequest: LoginRequest,
+  options?: RequestInit,
+): Promise<LoginResponse> => {
+  return customFetch<LoginResponse>(getAdminLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(loginRequest),
+  });
+};
+
+export const getAdminLoginMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminLogin>>,
+    TError,
+    { data: BodyType<LoginRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminLogin>>,
+  TError,
+  { data: BodyType<LoginRequest> },
+  TContext
+> => {
+  const mutationKey = ["adminLogin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminLogin>>,
+    { data: BodyType<LoginRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminLogin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminLogin>>
+>;
+export type AdminLoginMutationBody = BodyType<LoginRequest>;
+export type AdminLoginMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Login as admin
+ */
+export const useAdminLogin = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminLogin>>,
+    TError,
+    { data: BodyType<LoginRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminLogin>>,
+  TError,
+  { data: BodyType<LoginRequest> },
+  TContext
+> => {
+  return useMutation(getAdminLoginMutationOptions(options));
+};
+
+/**
+ * @summary Logout current session
+ */
+export const getAdminLogoutUrl = () => {
+  return `/api/auth/logout`;
+};
+
+export const adminLogout = async (
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getAdminLogoutUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminLogoutMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminLogout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["adminLogout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminLogout>>,
+    void
+  > = () => {
+    return adminLogout(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminLogoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminLogout>>
+>;
+
+export type AdminLogoutMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Logout current session
+ */
+export const useAdminLogout = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminLogout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAdminLogoutMutationOptions(options));
+};
+
+/**
+ * @summary Get current authenticated admin
+ */
+export const getGetAuthMeUrl = () => {
+  return `/api/auth/me`;
+};
+
+export const getAuthMe = async (options?: RequestInit): Promise<AdminInfo> => {
+  return customFetch<AdminInfo>(getGetAuthMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAuthMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetAuthMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAuthMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthMe>>> = ({
+    signal,
+  }) => getAuthMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAuthMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAuthMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAuthMe>>
+>;
+export type GetAuthMeQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get current authenticated admin
+ */
+
+export function useGetAuthMe<
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAuthMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all products (public)
  */
 export const getGetProductsUrl = (params?: GetProductsParams) => {
   const normalizedParams = new URLSearchParams();
@@ -181,7 +417,7 @@ export type GetProductsQueryResult = NonNullable<
 export type GetProductsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get all products
+ * @summary Get all products (public)
  */
 
 export function useGetProducts<
@@ -208,7 +444,7 @@ export function useGetProducts<
 }
 
 /**
- * @summary Create a new product
+ * @summary Create a new product (admin only)
  */
 export const getCreateProductUrl = () => {
   return `/api/products`;
@@ -271,7 +507,7 @@ export type CreateProductMutationBody = BodyType<CreateProductRequest>;
 export type CreateProductMutationError = ErrorType<unknown>;
 
 /**
- * @summary Create a new product
+ * @summary Create a new product (admin only)
  */
 export const useCreateProduct = <
   TError = ErrorType<unknown>,
@@ -294,7 +530,7 @@ export const useCreateProduct = <
 };
 
 /**
- * @summary Get a product by ID
+ * @summary Get a product by ID (public)
  */
 export const getGetProductUrl = (id: number) => {
   return `/api/products/${id}`;
@@ -354,7 +590,7 @@ export type GetProductQueryResult = NonNullable<
 export type GetProductQueryError = ErrorType<void>;
 
 /**
- * @summary Get a product by ID
+ * @summary Get a product by ID (public)
  */
 
 export function useGetProduct<
@@ -381,7 +617,7 @@ export function useGetProduct<
 }
 
 /**
- * @summary Update a product
+ * @summary Update a product (admin only)
  */
 export const getUpdateProductUrl = (id: number) => {
   return `/api/products/${id}`;
@@ -445,7 +681,7 @@ export type UpdateProductMutationBody = BodyType<UpdateProductRequest>;
 export type UpdateProductMutationError = ErrorType<unknown>;
 
 /**
- * @summary Update a product
+ * @summary Update a product (admin only)
  */
 export const useUpdateProduct = <
   TError = ErrorType<unknown>,
@@ -468,7 +704,7 @@ export const useUpdateProduct = <
 };
 
 /**
- * @summary Delete a product
+ * @summary Delete a product (admin only)
  */
 export const getDeleteProductUrl = (id: number) => {
   return `/api/products/${id}`;
@@ -529,7 +765,7 @@ export type DeleteProductMutationResult = NonNullable<
 export type DeleteProductMutationError = ErrorType<unknown>;
 
 /**
- * @summary Delete a product
+ * @summary Delete a product (admin only)
  */
 export const useDeleteProduct = <
   TError = ErrorType<unknown>,
@@ -552,7 +788,7 @@ export const useDeleteProduct = <
 };
 
 /**
- * @summary Get all categories
+ * @summary Get all categories (public)
  */
 export const getGetCategoriesUrl = () => {
   return `/api/categories`;
@@ -603,7 +839,7 @@ export type GetCategoriesQueryResult = NonNullable<
 export type GetCategoriesQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get all categories
+ * @summary Get all categories (public)
  */
 
 export function useGetCategories<
@@ -627,7 +863,7 @@ export function useGetCategories<
 }
 
 /**
- * @summary Create a new category
+ * @summary Create a new category (admin only)
  */
 export const getCreateCategoryUrl = () => {
   return `/api/categories`;
@@ -690,7 +926,7 @@ export type CreateCategoryMutationBody = BodyType<CreateCategoryRequest>;
 export type CreateCategoryMutationError = ErrorType<unknown>;
 
 /**
- * @summary Create a new category
+ * @summary Create a new category (admin only)
  */
 export const useCreateCategory = <
   TError = ErrorType<unknown>,
@@ -713,7 +949,7 @@ export const useCreateCategory = <
 };
 
 /**
- * @summary Update a category
+ * @summary Update a category (admin only)
  */
 export const getUpdateCategoryUrl = (id: number) => {
   return `/api/categories/${id}`;
@@ -777,7 +1013,7 @@ export type UpdateCategoryMutationBody = BodyType<CreateCategoryRequest>;
 export type UpdateCategoryMutationError = ErrorType<unknown>;
 
 /**
- * @summary Update a category
+ * @summary Update a category (admin only)
  */
 export const useUpdateCategory = <
   TError = ErrorType<unknown>,
@@ -800,7 +1036,7 @@ export const useUpdateCategory = <
 };
 
 /**
- * @summary Delete a category
+ * @summary Delete a category (admin only)
  */
 export const getDeleteCategoryUrl = (id: number) => {
   return `/api/categories/${id}`;
@@ -861,7 +1097,7 @@ export type DeleteCategoryMutationResult = NonNullable<
 export type DeleteCategoryMutationError = ErrorType<unknown>;
 
 /**
- * @summary Delete a category
+ * @summary Delete a category (admin only)
  */
 export const useDeleteCategory = <
   TError = ErrorType<unknown>,
@@ -884,7 +1120,7 @@ export const useDeleteCategory = <
 };
 
 /**
- * @summary Get store settings
+ * @summary Get store settings (public)
  */
 export const getGetSettingsUrl = () => {
   return `/api/settings`;
@@ -935,7 +1171,7 @@ export type GetSettingsQueryResult = NonNullable<
 export type GetSettingsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get store settings
+ * @summary Get store settings (public)
  */
 
 export function useGetSettings<
@@ -959,7 +1195,7 @@ export function useGetSettings<
 }
 
 /**
- * @summary Update store settings
+ * @summary Update store settings (admin only)
  */
 export const getUpdateSettingsUrl = () => {
   return `/api/settings`;
@@ -1022,7 +1258,7 @@ export type UpdateSettingsMutationBody = BodyType<UpdateSettingsRequest>;
 export type UpdateSettingsMutationError = ErrorType<unknown>;
 
 /**
- * @summary Update store settings
+ * @summary Update store settings (admin only)
  */
 export const useUpdateSettings = <
   TError = ErrorType<unknown>,

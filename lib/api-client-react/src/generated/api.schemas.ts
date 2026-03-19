@@ -9,6 +9,30 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AdminInfo {
+  id: number;
+  username: string;
+  isActive: boolean;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  admin: AdminInfo;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
 export interface Product {
   id: number;
   name: string;

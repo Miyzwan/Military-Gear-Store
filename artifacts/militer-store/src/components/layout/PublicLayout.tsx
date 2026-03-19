@@ -42,7 +42,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <div className="w-px h-6 bg-border mx-2"></div>
-            <Link href="/admin" className="font-bold uppercase tracking-widest text-sm text-primary hover:text-primary-foreground transition-colors">
+            <Link href="/admin/login" className="font-bold uppercase tracking-widest text-sm text-primary hover:text-primary-foreground transition-colors">
               Login Admin
             </Link>
           </nav>
@@ -74,11 +74,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             ))}
             <div className="pt-4 border-t border-border">
               <Link 
-                href="/admin" 
+                href="/admin/login" 
                 className="block font-bold uppercase tracking-widest text-lg text-primary"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Dashboard Admin
+                Login Admin
               </Link>
             </div>
           </div>
@@ -109,7 +109,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <ul className="space-y-3 font-semibold uppercase tracking-wider text-sm text-muted-foreground">
                 <li><Link href="/" className="hover:text-accent transition-colors">Beranda</Link></li>
                 <li><Link href="/produk" className="hover:text-accent transition-colors">Katalog Produk</Link></li>
-                <li><Link href="/admin" className="hover:text-accent transition-colors">Admin Panel</Link></li>
+                <li><Link href="/admin/login" className="hover:text-accent transition-colors">Admin Panel</Link></li>
               </ul>
             </div>
             <div>

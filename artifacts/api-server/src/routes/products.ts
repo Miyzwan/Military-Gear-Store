@@ -8,24 +8,19 @@ import {
   UpdateProductParams,
   DeleteProductParams,
 } from "@workspace/api-zod";
-import { eq, and, ilike, sql } from "drizzle-orm";
+import { eq, and, ilike } from "drizzle-orm";
+import { requireAdmin } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
 
+// ── Public ────────────────────────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
     const query = GetProductsQueryParams.parse(req.query);
-
     const conditions = [];
-    if (query.categoryId !== undefined) {
-      conditions.push(eq(productsTable.categoryId, query.categoryId));
-    }
-    if (query.search) {
-      conditions.push(ilike(productsTable.name, `%${query.search}%`));
-    }
-    if (query.featured !== undefined) {
-      conditions.push(eq(productsTable.featured, query.featured));
-    }
+    if (query.categoryId !== undefined) conditions.push(eq(productsTable.categoryId, query.categoryId));
+    if (query.search) conditions.push(ilike(productsTable.name, `%${query.search}%`));
+    if (query.featured !== undefined) conditions.push(eq(productsTable.featured, query.featured));
 
     const products = await db
       .select({
@@ -45,50 +40,9 @@ router.get("/", async (req, res) => {
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    res.json(
-      products.map((p) => ({
-        ...p,
-        price: Number(p.price),
-      }))
-    );
+    res.json(products.map((p) => ({ ...p, price: Number(p.price) })));
   } catch (error) {
-    console.error(error);
-    res.status(400).json({ error: "Bad request" });
-  }
-});
-
-router.post("/", async (req, res) => {
-  try {
-    const body = CreateProductBody.parse(req.body);
-    const [product] = await db
-      .insert(productsTable)
-      .values({
-        name: body.name,
-        description: body.description,
-        price: String(body.price),
-        imageUrl: body.imageUrl ?? null,
-        categoryId: body.categoryId ?? null,
-        stock: body.stock,
-        featured: body.featured ?? false,
-        isActive: body.isActive ?? true,
-      })
-      .returning();
-
-    const category = product.categoryId
-      ? await db
-          .select()
-          .from(categoriesTable)
-          .where(eq(categoriesTable.id, product.categoryId))
-          .then((r) => r[0])
-      : null;
-
-    res.status(201).json({
-      ...product,
-      price: Number(product.price),
-      categoryName: category?.name ?? null,
-    });
-  } catch (error) {
-    console.error(error);
+    console.error("[products GET /]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
@@ -114,18 +68,44 @@ router.get("/:id", async (req, res) => {
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
       .where(eq(productsTable.id, id));
 
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
+    if (!product) return res.status(404).json({ error: "Product not found" });
     res.json({ ...product, price: Number(product.price) });
   } catch (error) {
-    console.error(error);
+    console.error("[products GET /:id]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
 
-router.put("/:id", async (req, res) => {
+// ── Admin-protected ───────────────────────────────────────────────────────────
+router.post("/", requireAdmin, async (req, res) => {
+  try {
+    const body = CreateProductBody.parse(req.body);
+    const [product] = await db
+      .insert(productsTable)
+      .values({
+        name: body.name,
+        description: body.description,
+        price: String(body.price),
+        imageUrl: body.imageUrl ?? null,
+        categoryId: body.categoryId ?? null,
+        stock: body.stock,
+        featured: body.featured ?? false,
+        isActive: body.isActive ?? true,
+      })
+      .returning();
+
+    const category = product.categoryId
+      ? await db.select().from(categoriesTable).where(eq(categoriesTable.id, product.categoryId)).then((r) => r[0])
+      : null;
+
+    res.status(201).json({ ...product, price: Number(product.price), categoryName: category?.name ?? null });
+  } catch (error) {
+    console.error("[products POST /]", error);
+    res.status(400).json({ error: "Bad request" });
+  }
+});
+
+router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = UpdateProductParams.parse(req.params);
     const body = UpdateProductBody.parse(req.body);
@@ -146,36 +126,26 @@ router.put("/:id", async (req, res) => {
       .where(eq(productsTable.id, id))
       .returning();
 
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
+    if (!product) return res.status(404).json({ error: "Product not found" });
 
     const category = product.categoryId
-      ? await db
-          .select()
-          .from(categoriesTable)
-          .where(eq(categoriesTable.id, product.categoryId))
-          .then((r) => r[0])
+      ? await db.select().from(categoriesTable).where(eq(categoriesTable.id, product.categoryId)).then((r) => r[0])
       : null;
 
-    res.json({
-      ...product,
-      price: Number(product.price),
-      categoryName: category?.name ?? null,
-    });
+    res.json({ ...product, price: Number(product.price), categoryName: category?.name ?? null });
   } catch (error) {
-    console.error(error);
+    console.error("[products PUT /:id]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = DeleteProductParams.parse(req.params);
     await db.delete(productsTable).where(eq(productsTable.id, id));
     res.status(204).end();
   } catch (error) {
-    console.error(error);
+    console.error("[products DELETE /:id]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });

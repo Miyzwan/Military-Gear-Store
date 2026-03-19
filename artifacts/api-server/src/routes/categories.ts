@@ -7,9 +7,11 @@ import {
   DeleteCategoryParams,
 } from "@workspace/api-zod";
 import { eq, sql } from "drizzle-orm";
+import { requireAdmin } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
 
+// ── Public ────────────────────────────────────────────────────────────────────
 router.get("/", async (_req, res) => {
   try {
     const categories = await db
@@ -27,12 +29,13 @@ router.get("/", async (_req, res) => {
 
     res.json(categories);
   } catch (error) {
-    console.error(error);
+    console.error("[categories GET /]", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.post("/", async (req, res) => {
+// ── Admin-protected ───────────────────────────────────────────────────────────
+router.post("/", requireAdmin, async (req, res) => {
   try {
     const body = CreateCategoryBody.parse(req.body);
     const [category] = await db
@@ -47,12 +50,12 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({ ...category, productCount: 0 });
   } catch (error) {
-    console.error(error);
+    console.error("[categories POST /]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = UpdateCategoryParams.parse(req.params);
     const body = UpdateCategoryBody.parse(req.body);
@@ -68,9 +71,7 @@ router.put("/:id", async (req, res) => {
       .where(eq(categoriesTable.id, id))
       .returning();
 
-    if (!category) {
-      return res.status(404).json({ error: "Category not found" });
-    }
+    if (!category) return res.status(404).json({ error: "Category not found" });
 
     const productCount = await db
       .select({ count: sql<number>`COUNT(*)::int` })
@@ -80,18 +81,18 @@ router.put("/:id", async (req, res) => {
 
     res.json({ ...category, productCount });
   } catch (error) {
-    console.error(error);
+    console.error("[categories PUT /:id]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = DeleteCategoryParams.parse(req.params);
     await db.delete(categoriesTable).where(eq(categoriesTable.id, id));
     res.status(204).end();
   } catch (error) {
-    console.error(error);
+    console.error("[categories DELETE /:id]", error);
     res.status(400).json({ error: "Bad request" });
   }
 });
