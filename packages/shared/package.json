@@ -1,0 +1,17 @@
+{
+  "name": "@workspace/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./config": "./src/config/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@workspace/api-zod": "workspace:*"
+  }
+}

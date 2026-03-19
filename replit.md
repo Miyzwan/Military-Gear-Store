@@ -4,6 +4,48 @@
 
 pnpm workspace monorepo using TypeScript. Military gear and uniform e-commerce website for Indonesian market.
 
+## Monorepo Structure
+
+```
+warzone-tactical/
+├── artifacts/
+│   ├── api-server/          → Express 5 REST API (backend)
+│   │   └── src/
+│   │       ├── routes/      → API route handlers (products, categories, settings, auth)
+│   │       ├── middlewares/ → Express middlewares (auth.ts = requireAdmin)
+│   │       ├── lib/         → Session config, admin seed
+│   │       └── app.ts       → Express app config (CORS, session, routes)
+│   └── militer-store/       → React+Vite storefront (public + admin)
+│       └── src/
+│           ├── pages/
+│           │   ├── home.tsx, catalog.tsx, product-detail.tsx   ← public
+│           │   └── admin/                                      ← admin (protected)
+│           ├── components/
+│           │   ├── layout/  → PublicLayout, AdminLayout
+│           │   ├── auth/    → ProtectedRoute
+│           │   └── ui/      → shadcn UI components
+│           ├── contexts/    → AuthContext (session state)
+│           ├── services/    → apiFetch, formatPrice, buildWhatsAppUrl (NO business logic in components)
+│           └── config/      → constants (routes, sort options, store defaults)
+│
+├── lib/                     → Shared generated packages (auto-generated — do not edit manually)
+│   ├── api-spec/            → OpenAPI YAML spec (source of truth for API contract)
+│   ├── api-zod/             → Zod schemas + TypeScript types (generated from OpenAPI)
+│   ├── api-client-react/    → TanStack Query hooks (generated from OpenAPI)
+│   └── db/                  → Drizzle ORM schema + DB client
+│
+├── packages/
+│   └── shared/              → Shared types, utils, config (hand-maintained)
+│       └── src/
+│           ├── types/       → Re-exports domain types from api-zod
+│           ├── utils/       → formatPrice, formatDate, buildWhatsAppUrl, truncate
+│           └── config/      → Constants shared across packages
+│
+├── scripts/                 → Code generation scripts (orval, openapi-codegen)
+├── .env.example             → Template for required environment variables
+└── pnpm-workspace.yaml      → Workspace roots: artifacts/*, lib/*, packages/*, scripts
+```
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces

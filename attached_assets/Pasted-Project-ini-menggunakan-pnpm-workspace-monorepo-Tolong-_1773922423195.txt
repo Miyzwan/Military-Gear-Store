@@ -1,0 +1,93 @@
+Project ini menggunakan pnpm workspace (monorepo).
+
+Tolong refactor project ini dengan aman tanpa merusak workspace, untuk memisahkan website publik dan admin dashboard sesuai best practice.
+
+KONTEKS PROJECT:
+- Menggunakan pnpm-workspace.yaml
+- Struktur masih belum dipisah antara public dan admin
+- Ada folder lib dan scripts yang kemungkinan shared
+
+TUJUAN:
+Pisahkan project menjadi 2 aplikasi:
+
+1. Public app (web)
+2. Admin dashboard (admin)
+
+Gunakan arsitektur monorepo modern seperti:
+
+/apps
+  /web
+  /admin
+
+/packages
+  /shared
+
+TUGAS ANDA:
+
+1. Analisis struktur project saat ini
+2. Jangan merusak dependency pnpm
+3. Jangan menghapus file penting tanpa alasan
+
+REFACTOR YANG DIINGINKAN:
+
+- Buat folder:
+  - apps/web → untuk website publik
+  - apps/admin → untuk dashboard admin
+  - packages/shared → untuk code yang digunakan bersama
+
+- Pindahkan code yang relevan:
+  - UI publik → ke apps/web
+  - logic admin → ke apps/admin
+  - utility, helper, types → ke packages/shared
+
+- Update pnpm-workspace.yaml agar mencakup:
+  - apps/*
+  - packages/*
+
+AUTH SYSTEM:
+
+- Buat sistem login admin sederhana tapi aman
+- Password harus di-hash
+- Gunakan session atau token sesuai stack yang ada
+- Buat middleware auth
+- Buat middleware role admin
+- Proteksi semua route admin di backend
+
+ROUTING:
+
+- Public site → `/`
+- Admin login → `/admin/login`
+- Admin dashboard → `/admin`
+
+STRUKTUR KODE:
+
+- Pisahkan:
+  - components
+  - pages
+  - services
+  - middleware
+  - config
+- Jangan campur admin dan public
+
+SECURITY:
+
+- Jangan simpan password plain text
+- Gunakan env untuk secret
+- Tambahkan `.env.example`
+- Proteksi route admin di backend, bukan hanya frontend
+
+OUTPUT:
+
+Setelah selesai:
+1. Tampilkan struktur folder final
+2. Jelaskan perubahan yang dilakukan
+3. Jelaskan cara login admin
+4. Jelaskan cara menjalankan project
+5. Pastikan semua masih berjalan dengan pnpm
+
+ATURAN PENTING:
+- Jangan rewrite seluruh project jika tidak perlu
+- Refactor secara bertahap
+- Jangan merusak workspace pnpm
+- Jangan membuat duplikasi dependency
+- Gunakan struktur profesional production-ready
