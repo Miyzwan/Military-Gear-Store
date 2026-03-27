@@ -22,12 +22,14 @@ router.post("/login", async (req, res) => {
       .limit(1);
 
     if (!admin || !admin.isActive) {
-      return res.status(401).json({ error: "Username atau password salah." });
+      res.status(401).json({ error: "Username atau password salah." });
+      return;
     }
 
     const valid = await bcrypt.compare(password, admin.passwordHash);
     if (!valid) {
-      return res.status(401).json({ error: "Username atau password salah." });
+      res.status(401).json({ error: "Username atau password salah." });
+      return;
     }
 
     req.session.adminId = admin.id;
@@ -68,7 +70,8 @@ router.get("/me", requireAdmin, async (req, res) => {
 
     if (!admin) {
       req.session.destroy(() => {});
-      return res.status(401).json({ error: "Session tidak valid." });
+      res.status(401).json({ error: "Session tidak valid." });
+      return;
     }
 
     res.json(admin);

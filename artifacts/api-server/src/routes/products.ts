@@ -68,7 +68,10 @@ router.get("/:id", async (req, res) => {
       .leftJoin(categoriesTable, eq(productsTable.categoryId, categoriesTable.id))
       .where(eq(productsTable.id, id));
 
-    if (!product) return res.status(404).json({ error: "Product not found" });
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
     res.json({ ...product, price: Number(product.price) });
   } catch (error) {
     console.error("[products GET /:id]", error);
@@ -126,7 +129,10 @@ router.put("/:id", requireAdmin, async (req, res) => {
       .where(eq(productsTable.id, id))
       .returning();
 
-    if (!product) return res.status(404).json({ error: "Product not found" });
+    if (!product) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
 
     const category = product.categoryId
       ? await db.select().from(categoriesTable).where(eq(categoriesTable.id, product.categoryId)).then((r) => r[0])

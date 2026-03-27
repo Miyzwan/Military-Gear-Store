@@ -71,7 +71,10 @@ router.put("/:id", requireAdmin, async (req, res) => {
       .where(eq(categoriesTable.id, id))
       .returning();
 
-    if (!category) return res.status(404).json({ error: "Category not found" });
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
 
     const productCount = await db
       .select({ count: sql<number>`COUNT(*)::int` })
